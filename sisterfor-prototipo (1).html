@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SISTERFOR — Protótipo navegável</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{--ink:#1E1E1E;--ink2:#4A4A4A;--mut:#5E5E5E;--line:#C9C9C6;--line2:#E4E4E1;--fill:#F1F1EF;--bg:#FAFAF9;--w:#FFFFFF;--dk:#2B2B2B;--mid:#8A8A86}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.45}
+a{color:var(--ink)}a:hover{color:#000}
+button,input,select,textarea{font:inherit;color:var(--ink)}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+:focus-visible{outline:3px solid #000;outline-offset:2px}
+/* header */
+.hdr{background:var(--w);border-bottom:1px solid var(--line);padding:12px 32px;display:flex;flex-wrap:wrap;align-items:center;gap:12px 28px;position:sticky;top:0;z-index:5}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo{width:36px;height:36px;border:1.5px solid #6B6B6B;border-radius:4px;display:flex;align-items:center;justify-content:center;font:9px 'IBM Plex Mono',monospace;color:var(--mut)}
+.brand b{display:block;font-size:17px;letter-spacing:.04em}.brand small{font-size:11px;color:var(--mut)}
+.nav{display:flex;flex-wrap:wrap;gap:4px;flex:1 1 auto}
+.nav a{padding:10px 14px;min-height:44px;display:flex;align-items:center;border-radius:4px;text-decoration:none;font-weight:500}
+.nav a[aria-current=page]{background:var(--dk);color:#fff;font-weight:600}
+.search{display:flex;align-items:center;gap:8px;border:1px solid var(--mid);border-radius:4px;padding:0 12px;height:44px;flex:0 1 300px;min-width:200px;background:var(--w)}
+.search input{border:0;outline:none;flex:1;min-width:0;background:transparent;font-size:14px}
+.user{display:flex;align-items:center;gap:12px;font-size:13px}
+.av{width:36px;height:36px;border-radius:50%;background:var(--line2);display:flex;align-items:center;justify-content:center;font-weight:600;color:var(--ink2)}
+/* layout */
+main{max-width:1312px;margin:0 auto;padding:32px 32px 72px;display:flex;flex-direction:column;gap:22px}
+h1{margin:0;font-size:30px;font-weight:600;line-height:1.15}
+h2{margin:0;font-size:17px;font-weight:600}
+.sub{margin:0;color:var(--ink2)}
+.card{background:var(--w);border:1px solid var(--line);border-radius:6px;padding:20px 22px}
+.card.strong{border:1.5px solid var(--ink)}
+.card.dash{border-style:dashed;border-color:var(--mid)}
+.row{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.between{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+.g2,.g3,.g4{display:grid;gap:16px 20px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:860px){.g2,.g3,.g4{grid-template-columns:1fr}main{padding:24px 16px 64px}.hdr{padding:10px 16px}}
+.stack{display:flex;flex-direction:column;gap:12px}
+.crumb{font-size:14px;color:var(--ink2);display:flex;gap:8px;flex-wrap:wrap}
+.kpi span{display:block;font-size:14px;color:var(--ink2)}.kpi b{font:500 36px 'IBM Plex Mono',monospace}
+.bar{height:12px;border-radius:6px;background:var(--line2);overflow:hidden;display:flex}.bar i{display:block;background:var(--ink2)}
+.note{font-size:13px;color:var(--mut);margin:0}
+/* controls */
+.btn{height:44px;padding:0 18px;border:1px solid var(--mid);background:var(--w);border-radius:4px;font-size:14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;cursor:pointer;white-space:nowrap}
+.btn.p{background:var(--dk);color:#fff;border-color:var(--dk);font-weight:600}
+.btn.o{border-color:var(--ink);font-weight:600}
+.btn.lg{height:52px;font-size:16px}
+.btn:disabled{background:var(--line);border-color:var(--line);color:var(--ink2);cursor:not-allowed}
+.link{background:none;border:0;padding:8px 2px;text-decoration:underline;cursor:pointer;font-size:14px}
+.chip{height:40px;padding:0 16px;border-radius:20px;border:1px solid var(--mid);background:var(--w);cursor:pointer;font-size:14px}
+.chip[aria-pressed=true]{background:var(--dk);color:#fff;border-color:var(--dk);font-weight:600}
+.fld{display:flex;flex-direction:column;gap:6px}.fld label,.lbl{font-size:13px;font-weight:600}
+.fld input,.fld select,.fld textarea{height:44px;border:1px solid var(--mid);border-radius:4px;padding:0 12px;font-size:14px;background:var(--w)}
+.fld textarea{height:auto;padding:12px;resize:vertical}
+.chk{display:flex;gap:8px;align-items:center;font-size:14px;min-height:32px}.chk input{width:18px;height:18px}
+.tabs{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.tabs button{height:48px;padding:0 18px;border:0;border-bottom:3px solid transparent;background:none;cursor:pointer;color:var(--ink2)}
+.tabs button[aria-selected=true]{border-bottom-color:var(--ink);color:var(--ink);font-weight:600}
+/* table */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-weight:600;font-size:13px;color:var(--ink2);padding:12px 14px;border-bottom:2px solid var(--ink);white-space:nowrap}
+td{padding:13px 14px;border-bottom:1px solid var(--line2);font-size:14px;vertical-align:top}
+tr.hl td{background:var(--fill)}
+tr.click{cursor:pointer}tr.click:hover td{background:var(--fill)}
+.sk{display:block;height:12px;background:var(--line2);border-radius:3px}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border:1px solid var(--mid);border-radius:12px;font-size:13px;white-space:nowrap}
+.badge.b{border:1.5px solid var(--ink);font-weight:600}
+.badge.d{border:1px dashed var(--ink)}.badge.s{background:var(--dk);color:#fff;border-color:var(--dk)}.badge.x{text-decoration:line-through}
+.alert{display:flex;gap:12px;padding:14px 16px;border:1.5px dashed var(--ink);border-radius:6px;background:var(--fill)}
+.alert.ok{border-style:solid;background:var(--w)}
+/* stepper */
+.steps{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.steps li{display:flex;flex-direction:column;gap:8px;font-size:14px;color:var(--ink2)}
+.steps li::before{content:"";height:6px;border-radius:3px;background:var(--line)}
+.steps li.done,.steps li.cur{color:var(--ink)}.steps li.done::before,.steps li.cur::before{background:var(--ink)}
+.num{flex:none;width:30px;height:30px;border-radius:50%;background:var(--dk);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.num.o{background:none;color:var(--ink);border:1.5px solid var(--ink)}
+.list{margin:0;padding:0;list-style:none}
+.list li{display:flex;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line2)}
+.list li:last-child{border-bottom:0}
+.short{min-height:52px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--mid);border-radius:4px;background:var(--w);text-decoration:none;font-weight:500}
+/* screens */
+.screen{display:none}.screen.on{display:block}
+/* login */
+.login{max-width:1040px;margin:56px auto;display:flex;flex-wrap:wrap;background:var(--w);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.login>section{flex:1 1 420px;padding:44px;display:flex;flex-direction:column;gap:22px}
+.login>section+section{background:var(--fill)}
+@media(max-width:600px){.login{margin:16px}.login>section{padding:24px}}
+/* faq */
+.faq button{width:100%;min-height:56px;padding:12px 22px;border:0;background:none;display:flex;justify-content:space-between;gap:12px;text-align:left;cursor:pointer;font-weight:500}
+.faq>div{border-bottom:1px solid var(--line2)}.faq p{margin:0;padding:0 22px 18px;color:var(--ink2);font-size:14px}
+/* doc */
+.doc{background:var(--w);border:1px solid var(--mid);padding:32px 36px;display:flex;flex-direction:column;gap:14px;font-size:13px}
+.doc dl{margin:0;display:grid;grid-template-columns:170px 1fr;gap:4px 12px}.doc dt{font-weight:600}.doc dd{margin:0}
+/* proto tools */
+.tools{position:fixed;right:16px;bottom:16px;display:flex;gap:8px;z-index:20}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);background:#FFFDF2;border-left:1px solid var(--line);box-shadow:-8px 0 24px rgba(0,0,0,.12);padding:24px;overflow:auto;z-index:30;transform:translateX(100%);transition:transform .2s}
+.drawer.on{transform:none}
+.drawer pre{white-space:pre-wrap;font:14px/1.55 'IBM Plex Sans',sans-serif;margin:0}
+.tree a{font-weight:700;text-decoration:none}.tree .kids{padding-left:22px;border-left:1px solid var(--line);margin:6px 0 0 6px;color:var(--ink2);display:flex;flex-direction:column;gap:4px}
+</style>
+</head>
+<body>
+
+<header class="hdr" id="hdr">
+  <a class="brand" href="#/painel"><span class="logo" aria-hidden="true">PMF</span><span><b>SISTERFOR</b><small>SEPOG · Gestão de terceirização</small></span></a>
+  <nav class="nav" aria-label="Principal">
+    <a href="#/painel" data-sec="painel">Painel</a>
+    <a href="#/contratos" data-sec="contratos">Contratos</a>
+    <a href="#/faturas" data-sec="faturas">Faturas</a>
+    <a href="#/relatorios" data-sec="relatorios">Relatórios</a>
+    <a href="#/graficos" data-sec="graficos">Gráficos</a>
+    <a href="#/ajuda" data-sec="ajuda">Ajuda</a>
+  </nav>
+  <form class="search" role="search" onsubmit="location.hash='#/contratos';return false">
+    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <label for="bg" class="sr">Buscar no sistema</label>
+    <input id="bg" type="search" placeholder="Nº do contrato, empresa ou objeto">
+  </form>
+  <div class="user"><span class="av" aria-hidden="true">US</span><span><b>[Nome do usuário]</b><br><span style="color:var(--mut)">[Órgão / setor]</span></span><a href="#/acesso" style="padding:10px 4px">Sair</a></div>
+</header>
+
+<!-- ACESSO -->
+<div class="screen" id="s-acesso">
+<div class="login">
+<section aria-labelledby="h-login">
+  <div style="display:flex;align-items:center;gap:14px"><span class="logo" style="width:56px;height:56px;font-size:11px" aria-hidden="true">LOGO PMF</span><span><span style="font-size:13px;color:var(--mut)">Prefeitura de Fortaleza · SEPOG</span><br><b style="font-size:26px;letter-spacing:.04em">SISTERFOR</b></span></div>
+  <div><h1 id="h-login" style="font-size:28px">Entrar</h1><p class="sub">Gestão dos contratos de terceirização da PMF.</p></div>
+  <form class="stack" style="gap:18px" onsubmit="location.hash='#/painel';return false">
+    <div class="fld"><label for="u">Usuário [CPF ou login — não informado no manual]</label><input id="u" style="height:48px"></div>
+    <div class="fld"><label for="p">Senha</label><input id="p" type="password" style="height:48px"></div>
+    <div class="between" style="align-items:center"><label class="chk"><input type="checkbox">Manter conectado</label><a href="#/ajuda" style="font-size:14px">Esqueci minha senha [fluxo a definir]</a></div>
+    <button class="btn p lg" type="submit">Entrar</button>
+  </form>
+  <p class="note">Endereço direto: [URL do SISTERFOR]. Salve nos favoritos — não é mais preciso passar por Serviços › Sistemas no portal da SEPOG.</p>
+</section>
+<section aria-labelledby="h-pedir">
+  <h2 id="h-pedir" style="font-size:22px">Ainda não tem acesso?</h2>
+  <p class="sub">O pedido é feito pelo <b style="color:var(--ink)">Coordenador Administrativo</b> do seu órgão. O usuário deve ser, de preferência, servidor de carreira ou cargo comissionado.</p>
+  <div style="display:flex;gap:14px"><span class="num o">1</span><span>O Coordenador envia e-mail à <b>COGEC</b> [e-mail não informado]</span></div>
+  <div style="display:flex;gap:14px"><span class="num o">2</span><span>Com os dados do novo usuário:</span></div>
+  <ul class="g2 card" style="margin:0 0 0 44px;list-style:none;padding:16px 20px;gap:8px 16px;font-size:14px">
+    <li>✓ Nome completo</li><li>✓ CPF</li><li>✓ Telefone</li><li>✓ Órgão</li><li>✓ Setor</li><li>✓ E-mail institucional</li>
+  </ul>
+  <div style="display:flex;gap:14px"><span class="num o">3</span><span>Após o cadastro, o usuário vê <b>todos os contratos da sua secretaria</b>: vagas, ocupação, valor atual e demais dados.</span></div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn o" type="button" id="copyMail">Copiar modelo de e-mail</button><a href="#/ajuda?g=acesso" class="btn" style="border:0;text-decoration:underline">Ver guia de acesso</a></div>
+  <p class="note" id="copyMsg" role="status"></p>
+</section>
+</div>
+</div>
+
+<!-- PAINEL -->
+<div class="screen" id="s-painel"><main>
+  <div class="between"><div><p class="note" style="font-size:14px">[Órgão do usuário] · atualizado em [data/hora]</p><h1 style="font-size:32px">Olá, [Nome]</h1></div>
+  <div class="fld" style="flex-direction:row;align-items:center;gap:10px"><label for="po">Órgão</label><select id="po" style="min-width:220px"><option>Todos os órgãos da secretaria</option></select></div></div>
+  <section class="card stack" style="gap:18px" aria-labelledby="h-v">
+    <div class="between"><h2 id="h-v">Vagas terceirizadas</h2><a href="#/graficos" style="font-size:14px">Ver por área de atuação</a></div>
+    <div class="g3"><div class="kpi"><span>Contratadas</span><b>[0000]</b></div><div class="kpi"><span>Ocupadas</span><b>[0000]</b></div><div class="kpi"><span>Disponíveis</span><b>[0000]</b></div></div>
+    <div class="bar" style="height:14px" aria-hidden="true"><i style="width:78%"></i></div>
+    <p class="note">Barra: ocupadas ÷ contratadas (valor ilustrativo)</p>
+  </section>
+  <div class="g3">
+    <a class="card stack" style="text-decoration:none" href="#/contratos?chip=90"><span style="color:var(--ink2);font-size:14px">Contratos a vencer em 90 dias</span><b class="mono" style="font-size:34px;font-weight:500">[00]</b><u style="font-size:14px">Ver contratos →</u></a>
+    <a class="card stack" style="text-decoration:none" href="#/faturas?tab=analisar"><span style="color:var(--ink2);font-size:14px">Faturas aguardando análise</span><b class="mono" style="font-size:34px;font-weight:500">[00]</b><u style="font-size:14px">Analisar →</u></a>
+    <a class="card stack" style="text-decoration:none" href="#/relatorios"><span style="color:var(--ink2);font-size:14px">Limite financeiro comprometido (GRPFOR)</span><b class="mono" style="font-size:34px;font-weight:500">[00%]</b><span class="bar" style="height:8px" aria-hidden="true"><i style="width:64%"></i></span><u style="font-size:14px">Relatório de limites por órgão →</u></a>
+  </div>
+  <div class="row">
+    <section class="card" style="flex:2 1 560px;min-width:0" aria-labelledby="h-at"><h2 id="h-at">Precisa de atenção</h2>
+      <ul class="list">
+        <li><span aria-hidden="true">⏱</span><span style="flex:1"><b>Contrato 17/2015</b> — vigência termina em [00] dias</span><a href="#/contrato">Abrir</a></li>
+        <li><span aria-hidden="true">▤</span><span style="flex:1"><b>Fatura 13502</b> — PROCESSO FEV/2016 aguarda análise</span><a href="#/analise">Analisar</a></li>
+        <li><span aria-hidden="true">△</span><span style="flex:1"><b>Fatura [nº]</b> — aprovada, sem empenho vinculado: atesto bloqueado</span><a href="#/atesto">Vincular</a></li>
+        <li><span aria-hidden="true">○</span><span style="flex:1"><b>[00] vagas disponíveis</b> em Asseio e Conservação Predial</span><a href="#/contratos">Ver</a></li>
+      </ul>
+    </section>
+    <section class="stack" style="flex:1 1 300px;min-width:0" aria-labelledby="h-tf"><h2 id="h-tf">Tarefas frequentes</h2>
+      <a class="short" href="#/contratos">Consultar vigência de contrato <span aria-hidden="true">→</span></a>
+      <a class="short" href="#/faturas">Analisar fatura <span aria-hidden="true">→</span></a>
+      <a class="short" href="#/relatorios">Gerar relatório <span aria-hidden="true">→</span></a>
+      <a class="short" style="border-style:dashed;background:none" href="#/ajuda">Como fazer… (guias) <span aria-hidden="true">→</span></a>
+    </section>
+  </div>
+</main></div>
+
+<!-- CONTRATOS -->
+<div class="screen" id="s-contratos"><main>
+  <div class="between"><div><h1>Contratos</h1><p class="sub">Contratos de terceirização do seu órgão, com vigência e status.</p></div><button class="btn o" type="button">⭳ Exportar lista</button></div>
+  <div role="group" aria-label="Filtro rápido por prazo" style="display:flex;flex-wrap:wrap;gap:8px" id="chips"></div>
+  <section class="card" style="padding:0" aria-labelledby="h-f">
+    <div class="between" style="padding:10px 20px;border-bottom:1px solid var(--line2);align-items:center"><h2 id="h-f" style="font-size:16px">Filtros</h2><button class="link" type="button" id="fToggle" aria-expanded="true">Recolher filtros</button></div>
+    <div id="fBody" class="g3" style="padding:20px">
+      <div class="fld"><label for="fn">Nº do contrato</label><input id="fn" placeholder="ex.: 17/2015"></div>
+      <div class="fld"><label for="fo">Objeto</label><input id="fo" placeholder="palavra-chave"></div>
+      <div class="fld"><label for="fi">Instrumento</label><select id="fi"><option>Todos</option></select></div>
+      <div class="fld"><label for="fs">Secretaria</label><select id="fs"><option>SEPOG</option></select></div>
+      <div class="fld"><label for="fg">Órgão</label><select id="fg"><option>Todos</option></select></div>
+      <div class="fld"><label for="ft">Status</label><select id="ft"><option>Todos</option></select></div>
+      <div style="grid-column:span 2;display:flex;flex-wrap:wrap;gap:20px"><label class="chk"><input type="checkbox">Somente instrumentos não publicados</label><label class="chk"><input type="checkbox">Somente instrumentos sem anexos</label></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;align-items:flex-end"><button class="link" type="button">Limpar</button><button class="btn p" type="button">Buscar</button></div>
+    </div>
+  </section>
+  <section class="card" style="padding:0" aria-labelledby="h-r">
+    <div class="between" style="padding:14px 20px;align-items:center"><h2 id="h-r" style="font-size:16px"><span id="cCount">[N]</span> contratos encontrados</h2><span class="note">Ordenado por: dias restantes ↑ · <span id="cChipLbl">Todos</span></span></div>
+    <div class="tw"><table style="min-width:1100px">
+      <thead><tr><th>Nº contrato</th><th>Órgão</th><th>Contratado</th><th>Objeto</th><th>Início</th><th>Término</th><th>Dias restantes</th><th>Valor atual</th><th>Status</th></tr></thead>
+      <tbody id="cBody"></tbody>
+    </table></div>
+    <nav aria-label="Paginação" class="between" style="padding:14px 20px;align-items:center;font-size:14px"><span class="note">Mostrando 1–8 de [N]</span><div style="display:flex;gap:6px"><button class="btn" style="width:44px;padding:0" aria-label="Anterior">‹</button><button class="btn p" style="width:44px;padding:0" aria-current="page">1</button><button class="btn" style="width:44px;padding:0">2</button><button class="btn" style="width:44px;padding:0" aria-label="Próxima">›</button></div></nav>
+  </section>
+</main></div>
+
+<!-- DETALHE CONTRATO -->
+<div class="screen" id="s-contrato"><main>
+  <nav class="crumb" aria-label="Você está em"><a href="#/contratos">Contratos</a><span>/</span><span>17/2015</span></nav>
+  <div class="between" style="align-items:flex-start"><div class="stack" style="gap:6px"><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><h1>Contrato 17/2015</h1><span class="badge b">[Status]</span></div><p class="sub" style="font-size:16px">Missão Serviços Técnicos EIRELI – EPP · Órgão: SEPOG</p></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn o" href="#/relatorios">Espelho do contrato</a><a class="btn p" href="#/faturas">Ver faturas</a></div></div>
+  <div class="tabs" role="tablist" aria-label="Seções do contrato" id="dTabs"></div>
+  <div id="dResumo" class="stack" style="gap:20px">
+    <section class="card stack" aria-labelledby="h-vg"><div class="between"><h2 id="h-vg">Vigência</h2><span class="mono" style="font-size:20px">[00] dias restantes</span></div>
+      <div style="position:relative;height:16px;background:var(--line2);border-radius:8px" aria-hidden="true"><span style="position:absolute;left:0;top:0;bottom:0;width:72%;background:var(--ink2);border-radius:8px"></span><span style="position:absolute;left:72%;top:-6px;width:3px;height:28px;background:var(--ink)"></span></div>
+      <div style="display:flex;justify-content:space-between;font-size:14px;color:var(--ink2)"><span>Início: [dd/mm/aaaa]</span><span>Hoje</span><span>Término: [dd/mm/aaaa]</span></div></section>
+    <div class="g4">
+      <div class="card kpi"><span>Valor atual</span><b style="font-size:22px">R$ [0,00]</b></div><div class="card kpi"><span>Vagas contratadas</span><b style="font-size:22px">[000]</b></div><div class="card kpi"><span>Ocupadas</span><b style="font-size:22px">[000]</b></div><div class="card kpi"><span>Disponíveis</span><b style="font-size:22px">[000]</b></div>
+    </div>
+    <section class="card stack" aria-labelledby="h-ob"><h2 id="h-ob">Objeto</h2>
+      <p style="margin:0;max-width:900px" id="objTxt">Contratação de empresa pessoa jurídica para a prestação de serviços de mão de obra terceirizada, para atender às necessidades da Secretaria Municipal do Planejamento, Orçamento e Gestão – SEPOG…</p>
+      <button class="link" type="button" id="objBtn" aria-expanded="false" style="align-self:flex-start">Ler objeto completo</button></section>
+    <div class="row">
+      <section class="card stack" style="flex:3 1 560px;min-width:0" aria-labelledby="h-cat"><h2 id="h-cat">Vagas por categoria</h2>
+        <div class="tw"><table><thead><tr><th>Categoria</th><th>Contratadas</th><th>Ocupadas</th><th>Disponíveis</th></tr></thead><tbody id="catBody"></tbody></table></div>
+        <p class="note">Categorias do manual (cap. 1). Exibir só as que existem no contrato.</p></section>
+      <section class="card" style="flex:2 1 380px;min-width:0" aria-labelledby="h-uf"><h2 id="h-uf">Últimas faturas</h2>
+        <ul class="list"><li><span style="flex:1"><b>13502</b> · 02/2016 · PROCESSO FEV/2016</span><a href="#/analise">Analisar</a></li><li><span style="flex:1"><b>13395</b> · 01/2016 · PROCESSO DE JANEIRO DE 2016</span><span>[Status]</span></li><li><span style="flex:1"><b>11404</b> · 12/2015 · PROCESSO DEZEMBRO</span><span>[Status]</span></li></ul>
+        <a href="#/faturas" style="font-size:14px">Todas as faturas →</a></section>
+    </div>
+  </div>
+  <section id="dOther" class="card dash" style="display:none;text-align:center;padding:48px"><h2 id="dOtherT" style="font-size:18px"></h2><p class="sub" id="dOtherH" style="max-width:560px;margin:8px auto 0"></p></section>
+</main></div>
+
+<!-- FATURAS -->
+<div class="screen" id="s-faturas"><main>
+  <div><h1>Faturas</h1><p class="sub">Solicitações de pagamento das empresas contratadas. Escolha o contrato e a fatura para analisar.</p></div>
+  <section class="card" style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end" aria-label="Contrato">
+    <div class="fld" style="flex:2 1 360px"><label for="sc">Contrato</label><input id="sc" value="17/2015 — Missão Serviços Técnicos EIRELI – EPP" style="height:48px;border:1.5px solid var(--ink)"></div>
+    <div class="fld" style="flex:1 1 200px"><label for="sf">Fornecedor</label><select id="sf" style="height:48px"><option>Todos</option></select></div>
+    <div style="flex:1 1 100%;display:flex;flex-wrap:wrap;gap:24px;padding-top:14px;border-top:1px solid var(--line2);font-size:14px;color:var(--ink2)"><span>Órgão: <b style="color:var(--ink)">SEPOG</b></span><span>Vigência: <b style="color:var(--ink)">[00] dias restantes</b></span><span>Valor atual: <b style="color:var(--ink)">R$ [0,00]</b></span><a href="#/contrato">Ver contrato</a></div>
+  </section>
+  <section class="card" style="padding:0" aria-label="Lista de faturas">
+    <div class="between" style="padding:0 20px;border-bottom:1px solid var(--line);align-items:center"><div class="tabs" role="tablist" aria-label="Status" id="fTabs" style="border:0"></div><span class="note"><span id="fCount">6</span> faturas · ordenado por código ↓</span></div>
+    <div class="tw"><table style="min-width:1120px"><thead><tr><th>Código</th><th>Nº fatura</th><th>Criada em</th><th>Competência</th><th>Órgão</th><th>Observação</th><th>Valor fatura</th><th>Valor consumido</th><th>Status</th><th><span class="sr">Ações</span></th></tr></thead><tbody id="fBodyT"></tbody></table></div>
+  </section>
+  <section style="display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;font-size:14px;color:var(--ink2)" aria-labelledby="h-lg">
+    <h2 id="h-lg" style="font-size:14px;color:var(--ink)">Legenda de status</h2>
+    <span><span class="badge d">A analisar</span> sem parecer</span><span><span class="badge b">Empenhar</span> aprovada, falta empenho</span><span><span class="badge s">Aprovado</span> atesto liberado</span><span><span class="badge x">Negado</span> pagamento recusado</span><span class="note">[Significados a confirmar com a COGEC · status das linhas são ilustrativos]</span>
+  </section>
+</main></div>
+
+<!-- ANALISE -->
+<div class="screen" id="s-analise"><main>
+  <nav class="crumb" aria-label="Você está em"><a href="#/faturas">Faturas</a><span>/</span><span>Contrato 17/2015</span><span>/</span><span>Fatura 13502</span></nav>
+  <div class="between"><div><h1>Analisar fatura 13502</h1><p class="sub">Missão Serviços Técnicos EIRELI – EPP · Competência 02/2016</p></div><button class="btn" type="button">Abrir fatura original (anexo)</button></div>
+  <ol class="steps" aria-label="Etapas"><li class="done"><span><b>1 Fatura</b> · concluída</span></li><li class="cur" aria-current="step"><span><b>2 Conferência</b> · em andamento</span></li><li id="st3"><span><b>3 Parecer</b></span></li><li><span><b>4 Atesto</b></span></li></ol>
+  <section class="card g3" aria-label="Dados da fatura"><div><span class="lbl" style="color:var(--ink2);font-weight:400">Mês de competência</span><br><b>02/2016</b></div><div><span class="lbl" style="color:var(--ink2);font-weight:400">Nº da fatura</span><br><b>6</b></div><div><span class="lbl" style="color:var(--ink2);font-weight:400">Observação</span><br>PROCESSO FEV/2016</div></section>
+  <div class="row">
+    <section class="card stack" style="flex:3 1 600px;min-width:0" aria-labelledby="h-cu">
+      <div class="between" style="align-items:center"><h2 id="h-cu">Custos individuais da folha</h2><div class="fld" style="flex-direction:row;align-items:center;gap:8px"><label for="cg">Cargo</label><select id="cg" style="height:40px"><option>Todos</option><option>Motorista</option><option>Porteiro</option></select></div></div>
+      <div class="tw"><table style="min-width:520px"><thead><tr><th>Cargo</th><th>CPF</th><th>Nome</th><th>Valor unitário</th><th>Valor total</th></tr></thead><tbody>
+        <tr class="hl"><td colspan="5"><b style="font-size:13px;letter-spacing:.04em">MOTORISTA</b></td></tr>
+        <tr><td>Motorista</td><td class="mono">***.***.***-**</td><td>[Nome do colaborador]</td><td class="mono">R$ [0,00]</td><td class="mono">R$ [0,00]</td></tr>
+        <tr class="hl"><td colspan="5"><b style="font-size:13px;letter-spacing:.04em">PORTEIRO</b></td></tr>
+        <tr><td>Porteiro</td><td class="mono">***.***.***-**</td><td>[Nome do colaborador]</td><td class="mono">R$ [0,00]</td><td class="mono">R$ [0,00]</td></tr>
+        <tr><td colspan="5"><span class="sk" style="width:70%"></span></td></tr><tr><td colspan="5"><span class="sk" style="width:55%"></span></td></tr>
+      </tbody></table></div>
+      <p class="note">CPF mascarado na listagem; completo só ao expandir a linha.</p>
+    </section>
+    <section class="stack" style="flex:2 1 380px;min-width:0;gap:16px" aria-labelledby="h-rf">
+      <div class="card strong stack" style="gap:10px">
+        <h2 id="h-rf">Resumo financeiro</h2>
+        <div class="between" style="align-items:center"><span>Total consumido <b>(A)</b></span><span class="mono">R$ [0,00]</span></div>
+        <div class="between" style="align-items:center"><span>+ Acréscimo <b>(B)</b></span><span class="mono">R$ [0,00]</span></div>
+        <div class="between" style="align-items:center"><span>− Desconto <b>(C)</b></span><span class="mono">R$ [0,00]</span></div>
+        <div class="between" style="align-items:center;padding-top:10px;border-top:1px solid var(--ink);font-weight:600"><span>= Resultado <b>(D)</b></span><span class="mono">R$ [0,00]</span></div>
+        <hr style="border:0;border-top:1px solid var(--line2);margin:4px 0;width:100%">
+        <div class="between" style="align-items:center"><span>Previsão da fatura no SISTERFOR <b>(E)</b></span><span class="mono">R$ [0,00]</span></div>
+        <div class="between" style="align-items:center;font-weight:600"><span>Saldo <b>(E − D)</b></span><span class="mono">R$ [0,00]</span></div>
+      </div>
+      <div class="alert" role="note"><span aria-hidden="true">△</span><span>Exibido quando o saldo é negativo: <b>a fatura supera o previsto.</b> Revise acréscimos antes de aprovar.</span></div>
+    </section>
+  </div>
+  <section class="card stack" aria-labelledby="h-ck"><h2 id="h-ck">Checklist de conferência <span class="note" id="ckCount" style="display:inline;font-weight:400">(0 de 4)</span></h2>
+    <div class="g2" id="ck" style="gap:6px 24px"><label class="chk"><input type="checkbox">Custos individuais conferidos com a folha</label><label class="chk"><input type="checkbox">Total da fatura (D) confere com o anexo</label><label class="chk"><input type="checkbox">Acréscimos e descontos justificados</label><label class="chk"><input type="checkbox">Mês de competência correto</label></div>
+    <p class="note">Itens sugeridos a partir dos passos 5–6 do manual; validar com a COGEC.</p></section>
+  <section class="card stack" style="gap:16px" aria-labelledby="h-pa"><h2 id="h-pa">Parecer</h2>
+    <fieldset style="border:0;margin:0;padding:0"><legend class="lbl" style="font-size:14px;margin-bottom:10px">Resultado da análise</legend>
+      <div style="display:flex;gap:12px;flex-wrap:wrap"><button type="button" class="btn lg" data-par="aprovado" aria-pressed="false">Aprovado</button><button type="button" class="btn lg" data-par="negado" aria-pressed="false">Negado</button></div></fieldset>
+    <div class="fld"><label for="tp">Texto do parecer</label><textarea id="tp" rows="4" placeholder="Descreva a análise. Obrigatório quando Negado."></textarea></div>
+    <div class="between" style="align-items:center"><a href="#/faturas" style="font-size:14px;padding:12px 4px">Voltar para faturas</a>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span class="note" id="parMsg">Escolha Aprovado ou Negado para continuar</span><button class="btn p lg" type="button" id="parGo" disabled>Analisar</button></div></div>
+  </section>
+</main></div>
+
+<!-- ATESTO -->
+<div class="screen" id="s-atesto"><main>
+  <nav class="crumb" aria-label="Você está em"><a href="#/faturas">Faturas</a><span>/</span><a href="#/analise">Fatura 13502</a><span>/</span><span>Atesto</span></nav>
+  <h1>Empenho e atesto — fatura 13502</h1>
+  <ol class="steps" aria-label="Etapas"><li class="done"><span><b>1 Fatura</b> · concluída</span></li><li class="done"><span><b>2 Conferência</b> · concluída</span></li><li class="done"><span><b>3 Parecer</b> · Aprovado</span></li><li class="cur" aria-current="step"><span><b>4 Atesto</b> · em andamento</span></li></ol>
+  <div class="row" style="gap:24px">
+    <section class="stack" style="flex:1 1 520px;min-width:0;gap:16px" aria-labelledby="h-em">
+      <div id="emAlert" class="alert" role="status"><span aria-hidden="true">ⓘ</span><span><b>Vincule o empenho para liberar a impressão.</b> Sem empenho vinculado não é possível imprimir o atesto.</span></div>
+      <div class="card" style="padding:0">
+        <h2 id="h-em" style="padding:16px 20px;border-bottom:1px solid var(--line)">Selecione o empenho desta fatura</h2>
+        <fieldset style="border:0;margin:0;padding:0"><legend class="sr">Empenhos disponíveis</legend>
+          <div style="display:grid;grid-template-columns:44px repeat(4,minmax(0,1fr));padding:10px 20px;font-size:13px;font-weight:600;color:var(--ink2);border-bottom:1px solid var(--mid)"><span></span><span>Nº empenho</span><span>Data</span><span>Exercício</span><span>Valor</span></div>
+          <div id="emList"></div>
+        </fieldset>
+        <div style="display:flex;justify-content:flex-end;padding:16px 20px"><button class="btn p" type="button" id="emSave" disabled>Salvar vínculo</button></div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn p lg" type="button" id="emPrint" disabled>⎙ Imprimir atesto</button><button class="btn lg" type="button" id="emPdf" disabled>Baixar PDF</button></div>
+    </section>
+    <section class="stack" style="flex:1 1 520px;min-width:0;gap:10px" aria-labelledby="h-pv"><h2 id="h-pv" style="font-size:15px;color:var(--ink2)">Prévia do documento</h2>
+      <article class="doc" id="docPrev">
+        <div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px"><span class="logo" style="width:44px;height:44px" aria-hidden="true">BRASÃO</span><b style="font-size:14px">Prefeitura de Fortaleza</b><h3 style="margin:0;font-size:16px">ATESTO DE RECEBIMENTO DE SERVIÇOS</h3></div>
+        <p style="margin:0">Atesto que os serviços de mão de obra terceirizada, constantes na solicitação de pagamento em anexo, conforme informações abaixo:</p>
+        <dl><dt>Atesto nº</dt><dd>[nº]</dd><dt>Órgão</dt><dd>18101 – SEPOG</dd><dt>Contrato nº</dt><dd>17/2015</dd><dt>Nº empenho</dt><dd><b id="dNum">[a vincular]</b></dd><dt>Exercício empenho</dt><dd id="dEx">[a vincular]</dd><dt>Contrato GRPFOR</dt><dd>[nº]</dd><dt>Cód. órgão GRPFOR</dt><dd>[cód.]</dd><dt>Empresa fornecedora</dt><dd>Missão Serviços Técnicos EIRELI – EPP</dd><dt>CNPJ</dt><dd>[00.000.000/0000-00]</dd><dt>Período do serviço</dt><dd>02/2016</dd></dl>
+        <p style="margin:0">Foram realizados em condições satisfatórias e em conformidade com as especificações e exigências contratuais requeridas, tendo os seus valores sido calculados com base nos quantitativos constantes nos relatórios de acompanhamento informados pela contratada.</p>
+        <p style="margin:0"><b>Valor a ser pago: R$ [0,00] ([valor por extenso])</b></p>
+        <p style="margin:0">Desta forma, encaminhe-se o processo à Coordenadoria Administrativo-Financeira – COAFI, para que seja providenciado o respectivo pagamento.</p>
+        <div style="text-align:center;padding-top:24px"><div style="width:260px;max-width:100%;height:1px;background:var(--ink);margin:0 auto 4px"></div>[Nome do fiscal]<br><b>FISCAL DO CONTRATO</b></div>
+        <div class="g2" style="border-top:1px solid var(--line);padding-top:12px;gap:4px 16px;font-size:12px;color:var(--ink2)"><span>Solicitante: [nome]</span><span>CPF do solicitante: [***]</span><span>Responsável pela validação: [nome]</span><span>CPF do responsável: [***]</span></div>
+      </article>
+    </section>
+  </div>
+</main></div>
+
+<!-- RELATORIOS -->
+<div class="screen" id="s-relatorios"><main>
+  <div><h1>Relatórios</h1><p class="sub">Vagas, vigências, limites financeiros, contratos em execução, lotações, admissões e demissões, faturas.</p></div>
+  <div class="search" style="height:52px;max-width:640px;flex:none;border:1.5px solid var(--ink)"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><label for="qr" class="sr">Buscar relatório</label><input id="qr" type="search" placeholder="Buscar relatório (ex.: vagas, garantia, limite)" style="font-size:15px"></div>
+  <div class="row" style="gap:24px">
+    <div class="stack" style="flex:999 1 560px;min-width:0;gap:20px" id="repGroups"></div>
+    <aside class="card strong stack" style="flex:1 1 340px;min-width:0;gap:16px;position:sticky;top:96px" aria-labelledby="h-gr">
+      <h2 id="h-gr">Gerar relatório</h2><p style="margin:0;font-weight:600" id="repSel"></p>
+      <div class="fld"><label for="ro">Órgão</label><select id="ro"><option>Todos</option></select></div>
+      <div class="fld"><label for="rp">Período</label><select id="rp"><option>[Filtros por relatório a definir]</option></select></div>
+      <fieldset style="border:0;margin:0;padding:0"><legend class="lbl" style="margin-bottom:8px">Formato do arquivo</legend>
+        <div style="display:flex;gap:8px"><label class="btn" style="flex:1"><input type="radio" name="fmt" value="DOC">DOC</label><label class="btn" style="flex:1"><input type="radio" name="fmt" value="PDF">PDF</label><label class="btn" style="flex:1"><input type="radio" name="fmt" value="XLS" checked>XLS</label></div></fieldset>
+      <button class="btn p lg" type="button" id="repGo">⭳ Baixar relatório</button>
+      <p class="note" id="repMsg" role="status"></p>
+    </aside>
+  </div>
+</main></div>
+
+<!-- GRAFICOS -->
+<div class="screen" id="s-graficos"><main>
+  <div class="between"><div><h1>Gráficos</h1><p class="sub">Indicadores para análise rápida.</p></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap"><div class="fld"><label for="go">Órgão</label><select id="go" style="min-width:200px"><option>Todos</option></select></div><div class="fld"><label for="gp">Período</label><select id="gp" style="min-width:160px"><option>Atual</option></select></div></div></div>
+  <section class="card stack" style="padding:24px 28px;gap:18px" aria-labelledby="h-ar">
+    <div class="between" style="align-items:center"><h2 id="h-ar" style="font-size:18px">Quantidade de vagas por área de atuação</h2><div style="display:flex;gap:8px"><button class="btn" type="button">Exportar PNG</button><button class="btn" type="button">Ver dados (XLS)</button></div></div>
+    <ul class="list" id="bars" style="display:flex;flex-direction:column;gap:12px" aria-label="Percentual de vagas por área de atuação"></ul>
+    <p class="note" id="barTip" role="status">Passe o mouse ou foque uma barra para ver o detalhe. Clique para ver os contratos da categoria.</p>
+    <p class="note">Fonte: gráfico do manual (cap. 4.6). Os percentuais somam 104,03% — confirmar os dados.</p>
+  </section>
+  <div class="g3">
+    <section class="card dash stack" aria-labelledby="h-g2"><h2 id="h-g2" style="font-size:16px">Vagas ocupadas × disponíveis por órgão</h2><div aria-hidden="true" style="height:160px;display:flex;align-items:flex-end;gap:14px;border-bottom:1px solid var(--mid);padding:0 6px"><i style="flex:1;height:80%;background:var(--ink2)"></i><i style="flex:1;height:55%;background:var(--ink2)"></i><i style="flex:1;height:68%;background:var(--ink2)"></i><i style="flex:1;height:40%;background:var(--ink2)"></i><i style="flex:1;height:30%;background:var(--ink2)"></i></div><p class="note">Proposto · dados ilustrativos</p></section>
+    <section class="card dash stack" aria-labelledby="h-g3"><h2 id="h-g3" style="font-size:16px">Comprometimento do limite financeiro</h2><div aria-hidden="true" style="height:160px;display:flex;flex-direction:column;justify-content:center;gap:14px"><span class="bar" style="height:18px;border-radius:0"><i style="width:82%"></i></span><span class="bar" style="height:18px;border-radius:0"><i style="width:61%"></i></span><span class="bar" style="height:18px;border-radius:0"><i style="width:47%"></i></span><span class="bar" style="height:18px;border-radius:0"><i style="width:93%"></i></span></div><p class="note">Proposto · dados ilustrativos</p></section>
+    <section class="card dash stack" aria-labelledby="h-g4"><h2 id="h-g4" style="font-size:16px">Contratos por prazo de vencimento</h2><div aria-hidden="true" style="height:160px;display:flex;align-items:flex-end;gap:14px;border-bottom:1px solid var(--mid);padding:0 6px"><i style="flex:1;height:25%;background:var(--ink)"></i><i style="flex:1;height:45%;background:var(--ink2)"></i><i style="flex:1;height:70%;background:var(--mid)"></i><i style="flex:1;height:90%;background:var(--line)"></i></div><p class="note">≤30 · ≤90 · ≤180 · &gt;180 dias · proposto</p></section>
+  </div>
+</main></div>
+
+<!-- AJUDA -->
+<div class="screen" id="s-ajuda"><main style="gap:24px">
+  <div class="stack" style="gap:14px"><h1>Como podemos ajudar?</h1>
+    <div class="search" style="height:52px;max-width:640px;flex:none;border:1.5px solid var(--ink)"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><label for="qa" class="sr">Buscar na ajuda</label><input id="qa" type="search" placeholder="Ex.: imprimir atesto, vigência, solicitar acesso" style="font-size:15px"></div></div>
+  <div class="row" style="gap:24px">
+    <nav class="stack" style="flex:1 1 300px;min-width:0;gap:10px" aria-labelledby="h-gu"><h2 id="h-gu">Guias por tarefa</h2><div class="stack" style="gap:10px" id="guideList"></div></nav>
+    <article class="card stack" style="flex:999 1 560px;min-width:0;padding:26px 28px;gap:18px" aria-labelledby="gT"><div class="between" style="align-items:baseline"><h2 id="gT" style="font-size:22px"></h2><a id="gGo" href="#" style="font-size:14px;font-weight:600">Ir para a tela →</a></div><ol class="list" id="gSteps"></ol></article>
+  </div>
+  <div class="row" style="gap:24px">
+    <section class="card faq" style="flex:999 1 560px;min-width:0;padding:0" aria-labelledby="h-fq"><h2 id="h-fq" style="padding:16px 22px;border-bottom:1px solid var(--line)">Perguntas frequentes</h2><div id="faq" style="border:0"></div></section>
+    <aside class="stack" style="flex:1 1 300px;min-width:0;gap:16px">
+      <section class="card" style="background:var(--fill);border:0" aria-labelledby="h-co"><h2 id="h-co" style="font-size:16px">Fale com a COGEC</h2><p class="sub" style="font-size:14px;margin:8px 0">Coordenadoria de Gestão de Aquisições Corporativas · SEPOG</p><p style="margin:0;font-size:14px">E-mail: [não informado no manual]<br>Telefone: [não informado no manual]</p></section>
+      <section class="card" aria-labelledby="h-so"><h2 id="h-so" style="font-size:16px">Sobre o SISTERFOR</h2><p class="sub" style="font-size:14px;margin:8px 0">Reúne todos os contratos de terceirização da PMF, com vagas contratadas, ocupadas e disponíveis. Os pagamentos ficam vinculados aos contratos e ao limite financeiro do GRPFOR, evitando pagar diferente do contratado.</p><a href="#/ajuda" style="font-size:14px">Baixar manual completo (PDF)</a></section>
+    </aside>
+  </div>
+</main></div>
+
+<!-- MAPA -->
+<div class="screen" id="s-mapa"><main>
+  <div style="border-bottom:2px solid var(--ink);padding-bottom:20px"><p class="note mono" style="letter-spacing:.08em">ARQUITETURA DE INFORMAÇÃO</p><h1 style="font-size:40px">Mapa de telas — SISTERFOR</h1><p class="sub" style="font-size:17px;max-width:860px;margin-top:8px">Portal interno para gestores e fiscais de contratos de terceirização da Prefeitura de Fortaleza. Desktop, média fidelidade, prioridade em consulta rápida.</p></div>
+  <div class="row" style="gap:40px">
+    <section class="card tree stack" style="flex:1 1 520px;min-width:0;gap:16px" aria-label="Hierarquia">
+      <div><a href="#/acesso">01 · Acesso</a><div class="kids"><span>Entrar (URL direta)</span><span>Como solicitar acesso — checklist</span></div></div>
+      <div><a href="#/painel">02 · Painel (início)</a><div class="kids"><span>Vagas: contratadas · ocupadas · disponíveis</span><span>Contratos a vencer · Faturas a analisar · Limite financeiro</span><span>Alertas e atalhos</span></div></div>
+      <div><a href="#/contratos">03 · Contratos</a><div class="kids"><span>Lista com filtros (une Vigência e Listagem)</span><a href="#/contrato">04 · Detalhe do contrato</a><span style="padding-left:18px">Resumo · Vagas · Lotação · Faturas · Garantias</span></div></div>
+      <div><a href="#/faturas">05 · Faturas</a><div class="kids"><span>Escolher contrato → faturas por status</span><a href="#/analise">06 · Análise de fatura</a><a href="#/atesto">07 · Vincular empenho e imprimir atesto</a></div></div>
+      <div><a href="#/relatorios">08 · Relatórios</a><div class="kids"><span>19 relatórios em 3 grupos · DOC, PDF, XLS</span></div></div>
+      <div><a href="#/graficos">09 · Gráficos</a><div class="kids"><span>Vagas por área de atuação + indicadores propostos</span></div></div>
+      <div><a href="#/ajuda">10 · Ajuda</a><div class="kids"><span>Guias · Perguntas frequentes · Contato COGEC · Sobre</span></div></div>
+      <div style="border-top:1px dashed var(--mid);padding-top:12px;color:var(--ink2);font-size:14px"><b>Fora do escopo do manual:</b> Cadastrar · Terceirização · Temporários · Acompanhamento · Administração · Financeiro › Tipos de Prog. de Pagamentos</div>
+      <a href="#/lacunas" class="btn o" style="align-self:flex-start">11 · Simplificações e lacunas →</a>
+    </section>
+    <section class="stack" style="flex:1 1 460px;min-width:0;gap:14px" aria-labelledby="h-fl"><h2 id="h-fl" style="font-size:22px">Fluxo principal: analisar uma fatura</h2><p class="sub">Hoje: 9 passos em 4 telas (cap. 4.4). Proposto: 4 etapas guiadas.</p>
+      <a class="card" href="#/faturas" style="display:flex;gap:14px;text-decoration:none"><span class="num">1</span><span><b>Fatura</b><br><span class="sub" style="font-size:14px">Faturas → escolher contrato → clicar na fatura</span></span></a>
+      <a class="card" href="#/analise" style="display:flex;gap:14px;text-decoration:none"><span class="num">2</span><span><b>Conferência</b><br><span class="sub" style="font-size:14px">Custos individuais + resumo financeiro (A + B − C = D; saldo E − D)</span></span></a>
+      <a class="card" href="#/analise" style="display:flex;gap:14px;text-decoration:none"><span class="num">3</span><span><b>Parecer</b><br><span class="sub" style="font-size:14px">Aprovado ou Negado + texto → Analisar</span></span></a>
+      <a class="card" href="#/atesto" style="display:flex;gap:14px;text-decoration:none"><span class="num">4</span><span><b>Atesto</b><br><span class="sub" style="font-size:14px">Vincular empenho → Salvar → imprimir → processo segue à COAFI</span></span></a>
+    </section>
+  </div>
+</main></div>
+
+<!-- LACUNAS -->
+<div class="screen" id="s-lacunas"><main>
+  <div style="border-bottom:2px solid var(--ink);padding-bottom:20px"><a href="#/mapa" style="font-size:14px">← Mapa de telas</a><h1 style="font-size:40px;margin-top:8px">Simplificações e lacunas</h1><p class="sub" style="font-size:17px">Onde o manual vira outro formato na interface, e o que falta nele para fechar o design.</p></div>
+  <section class="stack" aria-labelledby="h-tr"><h2 id="h-tr" style="font-size:22px">Transformações de conteúdo</h2>
+    <div class="card tw" style="padding:0"><table style="min-width:900px"><thead><tr><th>No manual</th><th>Ação</th><th>Na interface</th><th>Tela</th></tr></thead><tbody>
+      <tr><td>4.1 Passos 1–3: abrir navegador (prints do Windows XP / IE), portal SEPOG → Serviços → Sistemas</td><td><b>Eliminar</b></td><td>URL direta + “salve nos favoritos”</td><td><a href="#/acesso">01 Acesso</a></td></tr>
+      <tr><td>Cap. 2: fluxo de solicitação de acesso em parágrafo</td><td><b>Checklist</b></td><td>3 passos numerados + 6 dados obrigatórios + modelo de e-mail copiável</td><td><a href="#/acesso">01</a>, <a href="#/ajuda">10</a></td></tr>
+      <tr><td>Cap. 1 e 3: conceito e lista de funcionalidades</td><td><b>Resumir</b></td><td>Funcionalidades viram cards do painel; texto institucional vira “Sobre”</td><td><a href="#/painel">02</a>, <a href="#/ajuda">10</a></td></tr>
+      <tr><td>4.2 Vigência e 4.3 Listagem: duas telas com os mesmos filtros</td><td><b>Unificar</b></td><td>Uma lista com chips de prazo e “dias restantes” em destaque</td><td><a href="#/contratos">03 Contratos</a></td></tr>
+      <tr><td>Categorias de vagas em texto corrido</td><td><b>Tabela</b></td><td>Contratadas / ocupadas / disponíveis por categoria</td><td><a href="#/contrato">04 Detalhe</a></td></tr>
+      <tr><td>4.4 Financeiro: 9 passos com prints</td><td><b>Dividir</b></td><td>4 etapas (Fatura · Conferência · Parecer · Atesto) + checklist</td><td><a href="#/faturas">05</a>, <a href="#/analise">06</a>, <a href="#/atesto">07</a></td></tr>
+      <tr><td>Resumo financeiro: campos A–E sem explicação</td><td><b>Diagrama</b></td><td>Fórmula visível: A + B − C = D; saldo = E − D; alerta se negativo</td><td><a href="#/analise">06 Análise</a></td></tr>
+      <tr><td>Status de fatura só nos prints</td><td><b>Ícones + legenda</b></td><td>Etiquetas distintas por forma, não só por cor</td><td><a href="#/faturas">05 Faturas</a></td></tr>
+      <tr><td>Aviso “não há empenho vinculado” após o clique</td><td><b>Prevenir</b></td><td>Vínculo vira etapa obrigatória; Imprimir só ativa depois</td><td><a href="#/atesto">07 Atesto</a></td></tr>
+      <tr><td>4.5: 19 relatórios num menu suspenso</td><td><b>Agrupar</b></td><td>Catálogo com busca: Contratos (6), Vagas e pessoas (9), Financeiro (4)</td><td><a href="#/relatorios">08</a></td></tr>
+      <tr><td>4.6: pizza com 7 fatias</td><td><b>Trocar gráfico</b></td><td>Barras horizontais ordenadas com valor escrito</td><td><a href="#/graficos">09</a></td></tr>
+      <tr><td>Manual inteiro em PDF</td><td><b>FAQ + guias</b></td><td>6 guias por tarefa e 5 perguntas frequentes com link para a tela</td><td><a href="#/ajuda">10 Ajuda</a></td></tr>
+    </tbody></table></div></section>
+  <section class="stack" aria-labelledby="h-du"><h2 id="h-du" style="font-size:22px">Dúvidas e lacunas no manual</h2>
+    <div class="g2">
+      <div class="card"><h3 style="margin:0 0 8px;font-size:16px">Acesso e perfis</h3><ol style="margin:0;padding-left:22px;font-size:14px;line-height:1.6"><li>Qual a credencial de login? Como recuperar a senha?</li><li>Qual o e-mail e telefone da COGEC?</li><li>Qual a URL direta do sistema?</li><li>Existem perfis (gestor, fiscal, coordenador)? Quem aprova fatura?</li></ol></div>
+      <div class="card"><h3 style="margin:0 0 8px;font-size:16px">Contratos</h3><ol start="5" style="margin:0;padding-left:22px;font-size:14px;line-height:1.6"><li>Lista e significado dos status de contrato.</li><li>O que são instrumentos “não publicados” e “sem anexos”?</li><li>Lotação e Garantias são citadas, mas não documentadas.</li><li>O sistema alerta vencimentos? Com quanta antecedência?</li></ol></div>
+      <div class="card"><h3 style="margin:0 0 8px;font-size:16px">Financeiro</h3><ol start="9" style="margin:0;padding-left:22px;font-size:14px;line-height:1.6"><li>Passo 8 do cap. 4.4 está em branco (pág. 14).</li><li>Diferença entre “Detalhar fatura” e “Abrir fatura”.</li><li>Critérios de Aprovado × Negado e o que ocorre após Negado.</li><li>Significado de Acréscimo, Desconto, Previsão e saldo negativo.</li><li>Como o limite do GRPFOR aparece ao usuário?</li><li>“Tipos de Prog. de Pagamentos” não é explicado.</li></ol></div>
+      <div class="card"><h3 style="margin:0 0 8px;font-size:16px">Relatórios, gráficos e geral</h3><ol start="15" style="margin:0;padding-left:22px;font-size:14px;line-height:1.6"><li>Descrição e filtros de cada um dos 19 relatórios.</li><li>Gráfico soma 104,03%; quais outros gráficos existem?</li><li>Cadastrar, Terceirização, Temporários, Acompanhamento e Administração sem documentação.</li><li>Manuais de 2015–2016: a interface atual ainda é essa?</li><li>Há identidade visual da PMF/SEPOG para a alta fidelidade?</li></ol></div>
+    </div></section>
+</main></div>
+
+<!-- protótipo -->
+<div class="tools"><a class="btn o" href="#/mapa">Mapa de telas</a><button class="btn p" type="button" id="notesBtn" aria-controls="drawer" aria-expanded="false">Notas da tela</button></div>
+<aside class="drawer" id="drawer" aria-label="Notas do wireframe"><div class="between" style="align-items:center;margin-bottom:16px"><h2 id="nTitle"></h2><button class="btn" type="button" id="notesClose" aria-label="Fechar notas">✕</button></div><pre id="nText"></pre></aside>
+
+<script>
+(function(){
+var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var NOTES={
+acesso:["01 · Acesso","OBJETIVO\nEntrar no sistema ou saber como pedir acesso.\n\nBLOCOS\n1. Identificação (PMF / SEPOG + SISTERFOR)\n2. Formulário de login\n3. Painel \"Ainda não tem acesso?\" com checklist\n\nCONTEÚDO DO MANUAL\nCap. 2: o pedido é feito pelo Coordenador Administrativo à COGEC, por e-mail, com nome completo, CPF, telefone, órgão, setor e e-mail institucional.\n\nINTERAÇÕES\n• Entrar → Painel\n• \"Copiar modelo de e-mail\" copia os campos exigidos\n• Substitui os passos 1–3 do cap. 4.1 por URL direta."],
+painel:["02 · Painel","OBJETIVO\nResponder em segundos: o que precisa da minha atenção hoje?\n\nBLOCOS\n1. Cabeçalho + busca global\n2. Saudação + órgão\n3. Vagas (contratadas / ocupadas / disponíveis)\n4. Cards: contratos a vencer, faturas a analisar, limite financeiro\n5. Alertas\n6. Atalhos\n\nCONTEÚDO\nCap. 1 e 3: controle de vagas, vigência, valor atual, pagamentos, limite financeiro.\n\nINTERAÇÕES\n• Card → lista já filtrada\n• Alerta → contrato ou fatura\n• Busca aceita nº, empresa ou objeto"],
+contratos:["03 · Contratos","OBJETIVO\nAchar um contrato e ver a vigência sem trocar de tela.\n\nUNIFICA\nConsultar › Vigência + Consultar › Listagem de Contratos.\n\nBLOCOS\n1. Título + exportar\n2. Chips de prazo\n3. Filtros recolhíveis\n4. Tabela com \"Dias restantes\" destacada\n5. Paginação\n\nINTERAÇÕES\n• Chips filtram na hora\n• Ordenar por coluna\n• Linha → Detalhe do contrato"],
+contrato:["04 · Detalhe do contrato","OBJETIVO\nTudo de um contrato num só lugar.\n\nBLOCOS\n1. Breadcrumb + cabeçalho\n2. Abas: Resumo · Vagas · Lotação · Faturas · Garantias\n3. Linha do tempo da vigência\n4. Valor atual + objeto recolhido\n5. Vagas por categoria\n6. Últimas faturas\n\nINTERAÇÕES\n• \"Ler objeto completo\" expande\n• Fatura → Análise\n• Lotação/Garantias: não documentadas no manual"],
+faturas:["05 · Faturas","OBJETIVO\nEncontrar a fatura a analisar.\n\nSIMPLIFICA\nPassos 1–4 do cap. 4.4 viram uma tela.\n\nBLOCOS\n1. Seletor de contrato\n2. Resumo do contrato\n3. Abas por status\n4. Tabela de faturas\n5. Legenda de status\n\nINTERAÇÕES\n• Abas filtram a lista\n• Linha / \"Analisar\" → Análise\n• \"Atesto\" → Empenho e atesto"],
+analise:["06 · Análise de fatura","OBJETIVO\nConferir a fatura e registrar o parecer.\n\nSIMPLIFICA\nPassos 5–6 viram etapas + checklist.\n\nBLOCOS\n1. Etapas\n2. Dados da fatura\n3. Custos individuais por cargo\n4. Resumo financeiro com fórmula\n5. Checklist\n6. Parecer\n7. Ações\n\nINTERAÇÕES\n• Saldo negativo exibe alerta\n• \"Analisar\" desabilitado até escolher o parecer\n• Aprovado → Empenho e atesto"],
+atesto:["07 · Empenho e atesto","OBJETIVO\nVincular o empenho e imprimir o atesto.\n\nSIMPLIFICA\nPassos 7–9: o vínculo vira etapa obrigatória antes de Imprimir.\n\nBLOCOS\n1. Etapas (4 de 4)\n2. Alerta preventivo\n3. Lista de empenhos\n4. Prévia do atesto\n5. Salvar vínculo · Imprimir / PDF\n\nINTERAÇÕES\n• Selecionar empenho habilita Salvar\n• Salvar preenche a prévia\n• Imprimir abre o diálogo de impressão"],
+relatorios:["08 · Relatórios","OBJETIVO\nAchar e gerar o relatório certo.\n\nTRANSFORMA\nMenu suspenso com 19 relatórios → catálogo agrupado com busca.\n\nBLOCOS\n1. Busca\n2. Grupos: Contratos · Vagas e pessoas · Financeiro\n3. Item + Gerar\n4. Painel: filtros + DOC / PDF / XLS\n\nINTERAÇÕES\n• Digitar filtra\n• Gerar seleciona no painel\n• Baixar gera o arquivo"],
+graficos:["09 · Gráficos","OBJETIVO\nLeitura rápida de indicadores.\n\nTRANSFORMA\nPizza de 7 fatias → barras horizontais ordenadas.\n\nBLOCOS\n1. Filtros\n2. Vagas por área de atuação\n3. Gráficos secundários propostos\n\nINTERAÇÕES\n• Hover/foco mostra o detalhe\n• Clique → Contratos filtrados\n\nATENÇÃO\nPercentuais do manual somam 104,03%."],
+ajuda:["10 · Ajuda","OBJETIVO\nAprender uma tarefa sem abrir o PDF.\n\nBLOCOS\n1. Busca\n2. Guias por tarefa\n3. Guia aberto passo a passo\n4. Perguntas frequentes\n5. Contato COGEC\n6. Sobre\n\nINTERAÇÕES\n• Guia abre ao lado\n• \"Ir para a tela\"\n• Accordion abre uma pergunta por vez"],
+mapa:["00 · Mapa de telas","Hierarquia de navegação e o fluxo principal. Clique em qualquer item para abrir a tela."],
+lacunas:["11 · Simplificações e lacunas","Transformações de conteúdo do manual e as 19 dúvidas a levar para a COGEC."]
+};
+var SEC={acesso:null,painel:'painel',contratos:'contratos',contrato:'contratos',faturas:'faturas',analise:'faturas',atesto:'faturas',relatorios:'relatorios',graficos:'graficos',ajuda:'ajuda',mapa:null,lacunas:null};
+var cur='painel';
+
+function parse(){var h=location.hash.replace(/^#\/?/,'')||'painel';var p=h.split('?');var q={};(p[1]||'').split('&').forEach(function(kv){if(kv){var a=kv.split('=');q[a[0]]=decodeURIComponent(a[1]||'')}});return{id:NOTES[p[0]]?p[0]:'painel',q:q}}
+function route(){
+  var r=parse();cur=r.id;
+  $$('.screen').forEach(function(s){s.classList.toggle('on',s.id==='s-'+cur)});
+  $('#hdr').style.display=cur==='acesso'?'none':'';
+  $$('.nav a').forEach(function(a){if(a.dataset.sec===SEC[cur])a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
+  if(cur==='contratos'&&r.q.chip){chip=r.q.chip;renderChips()}
+  if(cur==='faturas'&&r.q.tab){ftab=r.q.tab;renderFat()}
+  if(cur==='ajuda'&&r.q.g){gsel=r.q.g;renderGuides()}
+  document.title=NOTES[cur][0]+' — SISTERFOR';
+  $('#nTitle').textContent=NOTES[cur][0];$('#nText').textContent=NOTES[cur][1];
+  window.scrollTo(0,0);
+}
+window.addEventListener('hashchange',route);
+
+/* notes drawer */
+function setDrawer(o){$('#drawer').classList.toggle('on',o);$('#notesBtn').setAttribute('aria-expanded',o)}
+$('#notesBtn').onclick=function(){setDrawer(!$('#drawer').classList.contains('on'))};
+$('#notesClose').onclick=function(){setDrawer(false)};
+document.addEventListener('keydown',function(e){if(e.key==='Escape')setDrawer(false)});
+
+/* acesso */
+$('#copyMail').onclick=function(){var t='Assunto: Solicitação de acesso ao SISTERFOR\n\nNome completo:\nCPF:\nTelefone:\nÓrgão:\nSetor:\nE-mail institucional:';
+  var done=function(){$('#copyMsg').textContent='Modelo copiado para a área de transferência.'};
+  if(navigator.clipboard){navigator.clipboard.writeText(t).then(done,function(){$('#copyMsg').textContent='Não foi possível copiar automaticamente.'})}else done()};
+
+/* contratos */
+var CH=[['todos','Todos'],['30','Vencem em 30 dias'],['90','Vencem em 90 dias'],['vig','Vigentes'],['enc','Encerrados']],chip='todos';
+function renderChips(){
+  $('#chips').innerHTML=CH.map(function(c){return '<button type="button" class="chip" data-c="'+c[0]+'" aria-pressed="'+(c[0]===chip)+'">'+c[1]+'</button>'}).join('');
+  $$('#chips .chip').forEach(function(b){b.onclick=function(){chip=b.dataset.c;renderChips()}});
+  var n={todos:8,'30':2,'90':4,vig:6,enc:2}[chip];
+  $('#cCount').textContent='['+n+']';$('#cChipLbl').textContent=CH.filter(function(c){return c[0]===chip})[0][1];
+  var sk='<tr class="click" onclick="location.hash=\'#/contrato\'"><td><span class="sk" style="width:64px"></span></td><td><span class="sk" style="width:48px"></span></td><td><span class="sk" style="width:160px"></span></td><td><span class="sk" style="width:240px;margin-bottom:6px"></span><span class="sk" style="width:180px"></span></td><td><span class="sk" style="width:76px"></span></td><td><span class="sk" style="width:76px"></span></td><td><span class="badge" style="width:72px;height:22px"></span></td><td><span class="sk" style="width:88px"></span></td><td><span class="sk" style="width:56px"></span></td></tr>';
+  var first='<tr class="hl click" onclick="location.hash=\'#/contrato\'"><td><a href="#/contrato"><b>17/2015</b></a></td><td>SEPOG</td><td>Missão Serviços Técnicos EIRELI – EPP</td><td style="max-width:300px;color:var(--ink2)">Contratação de empresa pessoa jurídica para a prestação de serviços de mão de obra terceirizada…</td><td class="mono">[dd/mm/aaaa]</td><td class="mono">[dd/mm/aaaa]</td><td><span class="badge b mono">⏱ [00] dias</span></td><td class="mono">R$ [0,00]</td><td>[Status]</td></tr>';
+  $('#cBody').innerHTML=(chip==='enc'?'':first)+new Array(n-(chip==='enc'?0:1)+1).join(sk);
+}
+$('#fToggle').onclick=function(){var o=$('#fBody').style.display!=='none';$('#fBody').style.display=o?'none':'';this.textContent=o?'Mostrar filtros':'Recolher filtros';this.setAttribute('aria-expanded',!o)};
+
+/* detalhe */
+var DT=[['resumo','Resumo',''],['vagas','Vagas','Lista de vagas com cargo, categoria e situação (ocupada / disponível). Histórico e movimentação de vaga vêm dos relatórios homônimos.'],['lotacao','Lotação','Onde cada funcionário terceirizado está lotado. Campos não documentados no manual.'],['faturas','Faturas','Mesma tabela da tela Faturas, já filtrada por este contrato.'],['garantias','Garantias','Acompanhamento de garantias contratuais (cap. 3). Campos não documentados no manual.']],dtab='resumo';
+function renderDT(){
+  $('#dTabs').innerHTML=DT.map(function(t){return '<button type="button" role="tab" data-t="'+t[0]+'" aria-selected="'+(t[0]===dtab)+'">'+t[1]+'</button>'}).join('');
+  $$('#dTabs button').forEach(function(b){b.onclick=function(){dtab=b.dataset.t;renderDT()}});
+  var t=DT.filter(function(x){return x[0]===dtab})[0];
+  $('#dResumo').style.display=dtab==='resumo'?'':'none';$('#dOther').style.display=dtab==='resumo'?'none':'';
+  $('#dOtherT').textContent=t[1];$('#dOtherH').textContent=t[2];
+}
+var CATS=['Asseio e Conservação Predial','Vigilância Armada e Desarmada','Tecnologia da Informação','Suporte Operacional','Assessoria Técnica','Assessoria Técnica Superior','Saúde'];
+$('#catBody').innerHTML=CATS.map(function(c){return '<tr><td>'+c+'</td><td class="mono">[00]</td><td class="mono">[00]</td><td class="mono">[00]</td></tr>'}).join('');
+$('#objBtn').onclick=function(){var o=this.getAttribute('aria-expanded')==='true';$('#objTxt').textContent=o?'Contratação de empresa pessoa jurídica para a prestação de serviços de mão de obra terceirizada, para atender às necessidades da Secretaria Municipal do Planejamento, Orçamento e Gestão – SEPOG…':'Contratação de empresa pessoa jurídica para a prestação de serviços de mão de obra terceirizada, para atender às necessidades da Secretaria Municipal do Planejamento, Orçamento e Gestão – SEPOG, [restante do objeto conforme o contrato — texto completo não legível no manual].';this.textContent=o?'Ler objeto completo':'Recolher';this.setAttribute('aria-expanded',!o)};
+
+/* faturas */
+var FT=[['todas','Todas'],['analisar','A analisar'],['empenhar','Empenhar'],['aprovadas','Aprovadas'],['negadas','Negadas']],ftab='todas';
+var FR=[['13502','6','26/02/2016','02/2016','PROCESSO FEV/2016','analisar'],['13395','05','25/01/2016','01/2016','PROCESSO DE JANEIRO DE 2016','empenhar'],['11404','04','[dd/mm/aaaa]','12/2015','PROCESSO DEZEMBRO','aprovadas'],['11403','03','19/11/2015','11/2015','PROCESSO NOVEMBRO','aprovadas'],['7046','02','20/10/2015','10/2015','PROCESSO - OUTUBRO DE 2015','negadas'],['6888','01','05/10/2015','09/2015','—','aprovadas']];
+var BADGE={analisar:'<span class="badge d">A analisar</span>',empenhar:'<span class="badge b">Empenhar</span>',aprovadas:'<span class="badge s">Aprovado</span>',negadas:'<span class="badge x">Negado</span>'};
+function renderFat(){
+  $('#fTabs').innerHTML=FT.map(function(t){return '<button type="button" role="tab" data-t="'+t[0]+'" aria-selected="'+(t[0]===ftab)+'">'+t[1]+'</button>'}).join('');
+  $$('#fTabs button').forEach(function(b){b.onclick=function(){ftab=b.dataset.t;renderFat()}});
+  var rows=FR.filter(function(r){return ftab==='todas'||r[5]===ftab});
+  $('#fCount').textContent=rows.length;
+  $('#fBodyT').innerHTML=rows.length?rows.map(function(r){return '<tr><td><a href="#/analise"><b>'+r[0]+'</b></a></td><td>'+r[1]+'</td><td class="mono" style="font-size:13px">'+r[2]+'</td><td class="mono" style="font-size:13px">'+r[3]+'</td><td>18101 – SEPOG</td><td style="color:var(--ink2)">'+r[4]+'</td><td class="mono" style="font-size:13px">R$ [0,00]</td><td class="mono" style="font-size:13px">R$ [0,00]</td><td>'+BADGE[r[5]]+'</td><td style="white-space:nowrap"><a class="btn p" style="height:36px;padding:0 12px" href="#/analise">Analisar</a> <a class="btn" style="height:36px;padding:0 12px" href="#/atesto">Atesto</a></td></tr>'}).join(''):'<tr><td colspan="10" style="padding:32px;text-align:center;color:var(--ink2)">Nenhuma fatura neste status.</td></tr>';
+}
+
+/* analise */
+var par=null;
+$$('[data-par]').forEach(function(b){b.onclick=function(){par=b.dataset.par;
+  $$('[data-par]').forEach(function(x){var on=x.dataset.par===par;x.setAttribute('aria-pressed',on);x.classList.toggle('p',on)});
+  var g=$('#parGo');g.disabled=false;$('#st3').className='done';
+  if(par==='aprovado'){g.textContent='Analisar e seguir para o atesto →';$('#parMsg').textContent='Fatura será aprovada.'}
+  else{g.textContent='Analisar (negar fatura)';$('#parMsg').textContent='Texto do parecer obrigatório.'}}});
+$('#parGo').onclick=function(){if(par==='negado'&&!$('#tp').value.trim()){$('#parMsg').textContent='Escreva o parecer antes de negar.';$('#tp').focus();return}location.hash=par==='aprovado'?'#/atesto':'#/faturas?tab=negadas'};
+$$('#ck input').forEach(function(i){i.onchange=function(){$('#ckCount').textContent='('+$$('#ck input:checked').length+' de 4)'}});
+
+/* atesto */
+var EM=[['432','04/12/2015','2015'],['446','15/12/2015','2015'],['448','15/12/2015','2015'],['449','15/12/2015','2015']],esel=null,saved=false;
+function renderEm(){
+  $('#emList').innerHTML=EM.map(function(e,i){var on=i===esel;return '<label style="display:grid;grid-template-columns:44px repeat(4,minmax(0,1fr));align-items:center;min-height:52px;padding:0 20px;border-bottom:1px solid var(--line2);font-size:14px;cursor:pointer;'+(on?'background:var(--fill);font-weight:600':'')+'"><input type="radio" name="emp" value="'+i+'" '+(on?'checked':'')+' style="width:20px;height:20px"><span>'+e[0]+'</span><span class="mono" style="font-size:13px">'+e[1]+'</span><span>'+e[2]+'</span><span class="mono" style="font-size:13px">R$ [0,00]</span></label>'}).join('');
+  $$('#emList input').forEach(function(i){i.onchange=function(){esel=+i.value;saved=false;renderEm()}});
+  $('#emSave').disabled=esel===null;$('#emPrint').disabled=!saved;$('#emPdf').disabled=!saved;
+  var a=$('#emAlert');
+  if(saved){a.className='alert ok';a.innerHTML='<span aria-hidden="true">✓</span><span><b>Empenho '+EM[esel][0]+' vinculado.</b> O atesto está pronto para impressão.</span>';$('#dNum').textContent=EM[esel][0];$('#dEx').textContent=EM[esel][2]}
+  else{a.className='alert';a.innerHTML='<span aria-hidden="true">ⓘ</span><span><b>Vincule o empenho para liberar a impressão.</b> Sem empenho vinculado não é possível imprimir o atesto.</span>';$('#dNum').textContent='[a vincular]';$('#dEx').textContent='[a vincular]'}
+}
+$('#emSave').onclick=function(){saved=true;renderEm()};
+$('#emPrint').onclick=function(){window.print()};
+$('#emPdf').onclick=function(){alert('Protótipo: aqui o sistema geraria o PDF do atesto.')};
+
+/* relatorios */
+var RG=[['Contratos',['Relatório de Contratos por Órgão','Relatório de Contratos por Fornecedor','Relatório de Contratos por Gestor','Relatório de Espelho do Contrato','Relatório de Valores Licitados por Contrato','Relatório de Garantia']],['Vagas e pessoas',['Relatório de Análise de Categorias e Área de Atuação','Relatório de Contratos por Órgão – Análise por Vagas','Relatório Analítico por Vaga','Relatório de Histórico de Vagas','Relatório de Movimentação de Vaga','Relatório de Vagas Licitadas por Tabela Base','Relatório de Lotação','Relatório de Admissão e Demissão','Relatório de Temporários']],['Financeiro',['Relatório de Faturamento Mensal das Vagas','Relatório de Limites por Órgão','Relatório de Valores Financeiros por Fonte e Órgão','Relatório de Previsão de Economia']]];
+var rsel='Relatório de Contratos por Órgão';
+function renderRep(){
+  var q=$('#qr').value.toLowerCase(),html='',tot=0;
+  RG.forEach(function(g){var it=g[1].filter(function(n){return !q||n.toLowerCase().indexOf(q)>-1});tot+=it.length;if(!it.length)return;
+    html+='<section class="card" style="padding:0"><h2 style="padding:14px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;font-size:16px"><span>'+g[0]+'</span><span style="font-weight:400;font-size:14px;color:var(--mut)">'+it.length+' relatórios</span></h2><ul class="list" style="padding:0 20px">'+
+    it.map(function(n){var on=n===rsel;return '<li><span aria-hidden="true">▤</span><span style="flex:1"><span style="font-weight:500">'+n+'</span><br><span class="note">[descrição curta — não consta no manual]</span></span><button type="button" class="btn'+(on?' p':'')+'" style="height:40px" aria-pressed="'+on+'" data-r="'+n+'">'+(on?'Selecionado':'Gerar')+'</button></li>'}).join('')+'</ul></section>'});
+  $('#repGroups').innerHTML=tot?html:'<p class="card dash" style="margin:0">Nenhum relatório encontrado. Tente outra palavra.</p>';
+  $$('#repGroups [data-r]').forEach(function(b){b.onclick=function(){rsel=b.dataset.r;$('#repMsg').textContent='';renderRep()}});
+  $('#repSel').textContent=rsel;
+}
+$('#qr').oninput=renderRep;
+$('#repGo').onclick=function(){var f=$('input[name=fmt]:checked').value;$('#repMsg').textContent='Protótipo: “'+rsel+'” seria baixado em '+f+'.'};
+
+/* graficos */
+var BR=[['Asseio e Conservação Predial',45.9],['Suporte Operacional',22.51],['Assessoria Técnica',11.28],['Assessoria Técnica Superior',10.52],['Tecnologia da Informação',5.56],['Saúde',5.08],['Vigilância',3.18]];
+$('#bars').innerHTML=BR.map(function(b){var v=b[1].toFixed(2).replace('.',',')+'%';return '<li style="display:grid;grid-template-columns:minmax(120px,260px) minmax(0,1fr);gap:16px;padding:0;border:0"><span style="text-align:right;font-size:14px">'+b[0]+'</span><a href="#/contratos" data-l="'+b[0]+'" data-v="'+v+'" style="display:flex;align-items:center;gap:10px;text-decoration:none" aria-label="'+b[0]+': '+v+'"><span style="display:block;height:28px;width:'+(b[1]/45.9*82).toFixed(1)+'%;background:var(--ink2);border-radius:0 3px 3px 0"></span><span class="mono" style="font-size:14px;font-weight:500">'+v+'</span></a></li>'}).join('');
+$$('#bars a').forEach(function(a){var f=function(){$('#barTip').textContent=a.dataset.l+': '+a.dataset.v+' das vagas · quantidade [não informada no manual]'};a.onmouseenter=f;a.onfocus=f});
+
+/* ajuda */
+var GU=[['acesso','Solicitar acesso','acesso',['O Coordenador Administrativo do órgão envia e-mail à COGEC.','Informe nome completo, CPF, telefone, órgão, setor e e-mail institucional.','Após o cadastro, você vê todos os contratos da sua secretaria.']],['vigencia','Consultar vigência','contratos',['Abra Contratos.','Use o atalho “Vencem em 90 dias” ou filtre por nº do contrato.','Veja dias restantes, objeto e status na tabela.','Clique no contrato para ver o detalhe.']],['fatura','Analisar uma fatura','faturas',['Abra Faturas e escolha o contrato.','Clique na fatura a analisar.','Confira os custos individuais e o resumo financeiro.','Marque Aprovado ou Negado, escreva o parecer e clique em Analisar.']],['atesto','Imprimir o atesto','atesto',['Na fatura aprovada, abra Empenho e atesto.','Selecione o empenho correspondente à fatura.','Clique em Salvar vínculo.','Clique em Imprimir atesto. O processo segue à COAFI.']],['relatorio','Gerar relatório','relatorios',['Abra Relatórios.','Busque ou escolha o relatório no grupo certo.','Escolha o formato: DOC, PDF ou XLS.','Clique em Baixar relatório.']],['graficos','Ver indicadores','graficos',['Abra Gráficos.','Filtre por órgão ou período.','Clique numa barra para ver os contratos daquela categoria.']]];
+var gsel='fatura';
+function renderGuides(){
+  var q=($('#qa').value||'').toLowerCase();
+  var list=GU.filter(function(g){return !q||(g[1]+' '+g[3].join(' ')).toLowerCase().indexOf(q)>-1});
+  $('#guideList').innerHTML=list.length?list.map(function(g){var on=g[0]===gsel;return '<button type="button" aria-pressed="'+on+'" data-g="'+g[0]+'" style="text-align:left;min-height:60px;padding:12px 16px;border:'+(on?'2px solid var(--ink)':'1px solid var(--line)')+';background:var(--w);border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center"><span style="'+(on?'font-weight:600':'')+'">'+g[1]+'</span><span class="note">'+g[3].length+' passos</span></button>'}).join(''):'<p class="note">Nenhum guia encontrado.</p>';
+  $$('#guideList [data-g]').forEach(function(b){b.onclick=function(){gsel=b.dataset.g;renderGuides()}});
+  var g=GU.filter(function(x){return x[0]===gsel})[0];
+  $('#gT').textContent=g[1];$('#gGo').href='#/'+g[2];
+  $('#gSteps').innerHTML=g[3].map(function(s,i){return '<li style="align-items:flex-start"><span class="num">'+(i+1)+'</span><span style="padding-top:4px">'+s+'</span></li>'}).join('');
+}
+$('#qa').oninput=renderGuides;
+var FAQ=[['Como solicito acesso ao sistema?','O pedido é feito pelo Coordenador Administrativo do seu órgão, por e-mail à COGEC, com nome completo, CPF, telefone, órgão, setor e e-mail institucional.'],['Quais contratos eu consigo ver?','Todos os contratos de terceirização da sua secretaria, com vagas, ocupação e valor atual.'],['Por que não consigo imprimir o atesto?','A fatura ainda não tem empenho vinculado. Selecione o empenho correspondente e clique em Salvar vínculo.'],['Em quais formatos posso baixar relatórios?','DOC, PDF ou XLS.'],['Quais são as categorias de vagas?','Asseio e Conservação Predial, Vigilância Armada e Desarmada, Tecnologia da Informação, Suporte Operacional, Assessoria Técnica, Assessoria Técnica Superior e Saúde.']],fopen=0;
+function renderFaq(){
+  $('#faq').innerHTML=FAQ.map(function(f,i){var o=i===fopen;return '<div><button type="button" aria-expanded="'+o+'" data-f="'+i+'"><span>'+f[0]+'</span><span aria-hidden="true" style="font-size:20px">'+(o?'−':'+')+'</span></button>'+(o?'<p>'+f[1]+'</p>':'')+'</div>'}).join('');
+  $$('#faq [data-f]').forEach(function(b){b.onclick=function(){var i=+b.dataset.f;fopen=fopen===i?-1:i;renderFaq()}});
+}
+
+renderChips();renderDT();renderFat();renderEm();renderRep();renderGuides();renderFaq();route();
+})();
+</script>
+</body>
+</html>
